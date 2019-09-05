@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="Boosting算法是一种训练多个基学习器，并将其组成强学习器的集成学习算法。其工作的核心思想大致如下：从训练集训练出一个基学习器，再根据基学习器对训练样本的分布进行调整，然后用调整之后的样本分布训练下一个基学习器；如此循环，直到基学习器的数量达到某一指定数值，或者触发其他的指定停止条件，最后将学习到的基学习器组合得到最终的学习器。 我们先来看看boosting算法中的AdaBoost算法 一、A">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-04-02T09:49:16.000Z">
+<meta property="og:updated_time" content="2019-09-05T09:13:06.614Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="AdaBoost">
 <meta name="twitter:description" content="Boosting算法是一种训练多个基学习器，并将其组成强学习器的集成学习算法。其工作的核心思想大致如下：从训练集训练出一个基学习器，再根据基学习器对训练样本的分布进行调整，然后用调整之后的样本分布训练下一个基学习器；如此循环，直到基学习器的数量达到某一指定数值，或者触发其他的指定停止条件，最后将学习到的基学习器组合得到最终的学习器。 我们先来看看boosting算法中的AdaBoost算法 一、A">
@@ -256,7 +256,7 @@
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/29/AdaBoost原理/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
+      <meta itemprop="name" content="vivid">
       <meta itemprop="description" content>
       <meta itemprop="image" content="/images/avatar.gif">
     </span>
@@ -344,19 +344,29 @@
       
         <p>Boosting算法是一种训练多个基学习器，并将其组成强学习器的集成学习算法。其工作的核心思想大致如下：从训练集训练出一个基学习器，再根据基学习器对训练样本的分布进行调整，然后用调整之后的样本分布训练下一个基学习器；如此循环，直到基学习器的数量达到某一指定数值，或者触发其他的指定停止条件，最后将学习到的基学习器组合得到最终的学习器。</p>
 <p>我们先来看看boosting算法中的<strong>AdaBoost</strong>算法</p>
-<h1 id="一、AdaBoost"><a href="#一、AdaBoost" class="headerlink" title="一、AdaBoost"></a>一、AdaBoost</h1><h2 id="算法原理"><a href="#算法原理" class="headerlink" title="算法原理"></a>算法原理</h2><p>假定有一个二分类的任务，训练集表示为$$T=\lbrace(x_1,y_1),(x_2,y_2),…,(x_m,y_m)\rbrace$$<br>在训练第$k$个基学习器的样本权重分布为<br>$$D_k = (w_{k,1},w_{k,2},…,w_{k,m})$$<br>其中$w_{ki}$代表样本$(x_i,y_i)$的权重，则AdaBoost算法的工作流程如下：</p>
-<p>(1) 初始化样本的权重分布<br>$$D_1 = (w_{1,1},w_{1,2},…,w_{1,m}), w_{1,i}=\frac{1}{m},i=1,2,…,m$$<br>(2)for $k=1$  to  $M$</p>
+<h2 id="一、AdaBoost"><a href="#一、AdaBoost" class="headerlink" title="一、AdaBoost"></a>一、AdaBoost</h2><h3 id="算法原理"><a href="#算法原理" class="headerlink" title="算法原理"></a>算法原理</h3><p>假定有一个二分类的任务，训练集表示为<script type="math/tex">T=\lbrace(x_1,y_1),(x_2,y_2),...,(x_m,y_m)\rbrace</script><br>在训练第$k$个基学习器的样本权重分布为</p>
+<script type="math/tex; mode=display">D_k = (w_{k,1},w_{k,2},...,w_{k,m})</script><p>其中$w_{ki}$代表样本$(x_i,y_i)$的权重，则AdaBoost算法的工作流程如下：</p>
+<p>(1) 初始化样本的权重分布</p>
+<script type="math/tex; mode=display">D_1 = (w_{1,1},w_{1,2},...,w_{1,m}), w_{1,i}=\frac{1}{m},i=1,2,...,m</script><p>(2)for $k=1$  to  $M$</p>
 <ul>
 <li>用权重分布为$D_k$的训练数据训练得基学习器$f_k(x)$</li>
-<li>计算基学习器$f_k(x)$在训练数据上的分类误差率(加权误差率)<br>$$e_k=\sum_{i=1}^{m}w_{ki}I(f_k(x_i)\neq y_i))$$</li>
-<li>计算基学习器$f_k(x)$的权重，其中$ln$表示自然对数<br>$$\alpha _k = \frac{1}{2}ln\frac{1-e_k}{e_k}$$</li>
-<li>更新数据集中样本的权重分布<br>$$D_{k+1} = (w_{k+1,1},w_{k+1,2},…,w_{k+1,m})$$<br>$$w_{k+1,i}=\frac{w_{k,i}}{Z_k}exp(-\alpha <em>ky_if_k(x_i)),i=1,2,…,m$$<br>其中$Z_k$为规范化因子，确保$D</em>{k+1}$仍然是一个概率分布<br>$$Z_m=\sum_{i=1}^{m}w_{ki}exp(-\alpha _ky_if_k(x_i))$$</li>
+<li>计算基学习器$f_k(x)$在训练数据上的分类误差率(加权误差率)<script type="math/tex; mode=display">e_k=\sum_{i=1}^{m}w_{ki}I(f_k(x_i)\neq y_i))</script></li>
+<li>计算基学习器$f_k(x)$的权重，其中$ln$表示自然对数<script type="math/tex; mode=display">\alpha _k = \frac{1}{2}ln\frac{1-e_k}{e_k}</script></li>
+<li>更新数据集中样本的权重分布<script type="math/tex; mode=display">D_{k+1} = (w_{k+1,1},w_{k+1,2},...,w_{k+1,m})</script><script type="math/tex; mode=display">w_{k+1,i}=\frac{w_{k,i}}{Z_k}exp(-\alpha _ky_if_k(x_i)),i=1,2,...,m</script>其中$Z_k$为规范化因子，确保$D_{k+1}$仍然是一个概率分布<script type="math/tex; mode=display">Z_m=\sum_{i=1}^{m}w_{ki}exp(-\alpha _ky_if_k(x_i))</script></li>
 </ul>
-<p>(3) 组合各基学习器<br>$$f(x)=sign(\sum_{k=1}^{M}\alpha _kf_k(x))$$</p>
-<p>对于回归问题，AdaBoost算法的流程跟分类问题类似。<br>误差率的计算，对于第$k$个基学习器，用$E_k$表示其在数据集上面的最大误差<br>$$E_k=max_i|y_i-f_k(x_i)|, i=1,2,…,m$$<br>然后计算各样本的相对误差<br>$$e_{ki}=\frac{|y_i-f_k(x_i)|}{E_k}$$<br>当然相对误差可能有不同的计算方法，如平方损失<br>$$e_{ki}=\frac{(y_i-f_k(x_i))^2}{E_k^2}$$<br>如指数误差<br>$$e_{ki}=1-exp(-\frac{|y_i-f_k(x_i)|}{E_k})$$<br>于是基学习器的误差率为<br>$$e_k = \sum_{i=1}^{m}w_{ki}e_{ki}$$<br>有了误差率，相应的基学习器的权重为<br>$$\alpha <em>k=\frac{e_k}{1-e_k}$$<br>样本的权重更新为<br>$$w</em>{k+1,i}=\frac{w_{k,i}}{Z_k}\alpha_k^{1-e_{ki}}$$<br>最后组合基学习器的策略也不同，此处采用的是对加权的弱学习器取权重中位数对应的弱学习器作为强学习器的方法，最终的强回归器为<br>$$f(x)=f_{k^*}(x)$$<br>其中$f_{k^*}(x)$是对所有的$ln\frac{1}{\alpha _k}$的中位数对应的序号$k^*$对应的学习器。</p>
-<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>通过上文我们可以看到，基学习器的误差率为各样本误差率的加权和，权重大的样本分类错误将会对误差率贡献更大。</p>
+<p>(3) 组合各基学习器</p>
+<script type="math/tex; mode=display">f(x)=sign(\sum_{k=1}^{M}\alpha _kf_k(x))</script><p>对于回归问题，AdaBoost算法的流程跟分类问题类似。<br>误差率的计算，对于第$k$个基学习器，用$E_k$表示其在数据集上面的最大误差</p>
+<script type="math/tex; mode=display">E_k=max_i|y_i-f_k(x_i)|, i=1,2,...,m</script><p>然后计算各样本的相对误差</p>
+<script type="math/tex; mode=display">e_{ki}=\frac{|y_i-f_k(x_i)|}{E_k}</script><p>当然相对误差可能有不同的计算方法，如平方损失</p>
+<script type="math/tex; mode=display">e_{ki}=\frac{(y_i-f_k(x_i))^2}{E_k^2}</script><p>如指数误差</p>
+<script type="math/tex; mode=display">e_{ki}=1-exp(-\frac{|y_i-f_k(x_i)|}{E_k})</script><p>于是基学习器的误差率为</p>
+<script type="math/tex; mode=display">e_k = \sum_{i=1}^{m}w_{ki}e_{ki}</script><p>有了误差率，相应的基学习器的权重为</p>
+<script type="math/tex; mode=display">\alpha _k=\frac{e_k}{1-e_k}</script><p>样本的权重更新为</p>
+<script type="math/tex; mode=display">w_{k+1,i}=\frac{w_{k,i}}{Z_k}\alpha_k^{1-e_{ki}}</script><p>最后组合基学习器的策略也不同，此处采用的是对加权的弱学习器取权重中位数对应的弱学习器作为强学习器的方法，最终的强回归器为</p>
+<script type="math/tex; mode=display">f(x)=f_{k^*}(x)</script><p>其中$f_{k^*}(x)$是对所有的$ln\frac{1}{\alpha _k}$的中位数对应的序号$k^*$对应的学习器。</p>
+<h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><p>通过上文我们可以看到，基学习器的误差率为各样本误差率的加权和，权重大的样本分类错误将会对误差率贡献更大。</p>
 <p>通过基学习器的权重计算公式$\alpha _k = \frac{1}{2}ln\frac{1-e_k}{e_k}$可以看到，当$e_m\leqslant \frac{1}{2}$时，$\alpha _m\geqslant 0$，并且$\alpha_m$随$e_m$的增大而减小，这相当于误差率越大的学习器在最终学习器中的权重越低，这一点也很符合我们的直观。</p>
-<p>再看样本权重分布的改变，当$y_i=f_k(x_i)$时，$w_{k+1,i}=\frac{w_{k,i}}{Z_m}exp(-\alpha <em>m)$；当$y_i \neq f_k(x_i)$时，$w</em>{k+1,i}=\frac{w_{k,i}}{Z_m}exp(\alpha _m)$。由此可知，被前一轮学习器分类错误的样本的权重将增大，被正确分类的样本的权重将减小，因此被误分的样本在下一轮的学习中将起到更大的作用。不改变训练数据，不断的改变样本的权值分布，从而使训练数据在不同的基学习器中中发挥不同的作用，这正是AdaBoost的一大特点。</p>
+<p>再看样本权重分布的改变，当$y_i=f_k(x_i)$时，$w_{k+1,i}=\frac{w_{k,i}}{Z_m}exp(-\alpha _m)$；当$y_i \neq f_k(x_i)$时，$w_{k+1,i}=\frac{w_{k,i}}{Z_m}exp(\alpha _m)$。由此可知，被前一轮学习器分类错误的样本的权重将增大，被正确分类的样本的权重将减小，因此被误分的样本在下一轮的学习中将起到更大的作用。不改变训练数据，不断的改变样本的权值分布，从而使训练数据在不同的基学习器中中发挥不同的作用，这正是AdaBoost的一大特点。</p>
 <p>AdaBoost算法的基学习器的权重公式，以及样本权重分布更新公式为什么是这样？这一点可以从前向分布算法中推导出来，详情可见附录。</p>
 <p>最后对AdaBoost算法的优缺点进行简单的总结<br><strong>AdaBoost算法的主要优点有：</strong></p>
 <ol>
@@ -368,27 +378,37 @@
 <ol>
 <li>对异常样本敏感，异常样本在迭代中可能会获得较高的权重，影响最终的强学习器的预测准确性。</li>
 </ol>
-<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ol>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ol>
 <li>李航 《统计学习方法》</li>
 <li>周志华 《机器学习》</li>
 <li><a href="https://www.cnblogs.com/pinard/p/6140514.html" target="_blank" rel="noopener">https://www.cnblogs.com/pinard/p/6133937.html</a></li>
 <li><a href="https://www.cnblogs.com/pinard/p/6140514.html" target="_blank" rel="noopener">https://www.cnblogs.com/pinard/p/6140514.html</a></li>
 </ol>
-<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h1><h3 id="前向分布算法"><a href="#前向分布算法" class="headerlink" title="前向分布算法"></a>前向分布算法</h3><p>考虑加法模型<br>$$f(x)=\sum_{m=1}^{M}\beta _mb(x;\gamma _m)$$<br>其中$b(x;\gamma _m)$为基函数，$\gamma_m$为基函数的参数，$\beta_m$为基函数的系数。</p>
-<p>在给定训练数据及损失函数$L(y,f(x))$的条件下，学习加法模型$f(x)$称为经验风险最小化，即损失函数最小化的问题：<br>$$\underset{\beta_m,\gamma_m}{min}\sum_{i=1}^{N}L(y_i,\sum_{m=1}^{M}\beta_mb(x_i;\gamma_m))$$<br>通常这是一个复杂的优化问题，前向分步算法求解这一问题的思路是：因为学习的是加法模型，如果能够从前往后，每一步 只学习一个基函数及其系数，逐步逼近优化目标函数式，则可以简化优化的复杂度。具体地，每一步只需要优化如下损失函数：<br>$$\underset{\beta,\gamma}{min}\sum_{i=1}^{N}L(y_i,\beta b(x_i,\gamma ))$$</p>
-<p>给定损失函数$L(y,f(x))$，基函数集合$\lbrace b(x;\gamma) \rbrace$，及训练数据<br>$$T=\lbrace(x_1,y_1),(x_2,y_2),…,(x_N,y_N) \rbrace,y_i\in \lbrace -1,+1 \rbrace$$<br>前行分布算法如下：<br>(1) 初始化 f_0(x)=0<br>(2) for $m=1$ to $M$</p>
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><h3 id="前向分布算法"><a href="#前向分布算法" class="headerlink" title="前向分布算法"></a>前向分布算法</h3><p>考虑加法模型</p>
+<script type="math/tex; mode=display">f(x)=\sum_{m=1}^{M}\beta _mb(x;\gamma _m)</script><p>其中$b(x;\gamma _m)$为基函数，$\gamma_m$为基函数的参数，$\beta_m$为基函数的系数。</p>
+<p>在给定训练数据及损失函数$L(y,f(x))$的条件下，学习加法模型$f(x)$称为经验风险最小化，即损失函数最小化的问题：</p>
+<script type="math/tex; mode=display">\underset{\beta_m,\gamma_m}{min}\sum_{i=1}^{N}L(y_i,\sum_{m=1}^{M}\beta_mb(x_i;\gamma_m))</script><p>通常这是一个复杂的优化问题，前向分步算法求解这一问题的思路是：因为学习的是加法模型，如果能够从前往后，每一步 只学习一个基函数及其系数，逐步逼近优化目标函数式，则可以简化优化的复杂度。具体地，每一步只需要优化如下损失函数：</p>
+<script type="math/tex; mode=display">\underset{\beta,\gamma}{min}\sum_{i=1}^{N}L(y_i,\beta b(x_i,\gamma ))</script><p>给定损失函数$L(y,f(x))$，基函数集合$\lbrace b(x;\gamma) \rbrace$，及训练数据</p>
+<script type="math/tex; mode=display">T=\lbrace(x_1,y_1),(x_2,y_2),...,(x_N,y_N) \rbrace,y_i\in \lbrace -1,+1 \rbrace</script><p>前行分布算法如下：<br>(1) 初始化 f_0(x)=0<br>(2) for $m=1$ to $M$</p>
 <ul>
-<li>极小化损失函数<br>$$(\beta_m,\gamma_m) = arg\underset{\beta ,\gamma}{min}\sum_{i=1}^{N}L(y_i,f_{m-1}(x_i)+\beta b(x_i;\gamma))$$</li>
-<li>更新<br>$$f_m(x)=f_{m-1}(x)+\beta _mb(x;\gamma _m)$$</li>
+<li>极小化损失函数<script type="math/tex; mode=display">(\beta_m,\gamma_m) = arg\underset{\beta ,\gamma}{min}\sum_{i=1}^{N}L(y_i,f_{m-1}(x_i)+\beta b(x_i;\gamma))</script></li>
+<li>更新<script type="math/tex; mode=display">f_m(x)=f_{m-1}(x)+\beta _mb(x;\gamma _m)</script></li>
 </ul>
-<p>(3) 得到加法模型为<br>  $$f(x) = f_M(x)=\sum_{m=1}^{M}\beta _mb(x;\gamma _m)$$</p>
-<p>接下来将证明，当前行分布算法的损失函数是指数损失函数$L(y,f(x))=exp(-yf(x))$时，其学习的具体操作等价于AdaBoost算法学习的具体操作。</p>
-<p>假设经过$m-1$轮迭代的前向分布算法已经得到$f_{m-1}(x)$:<br>$$f_{m-1}(x)=\alpha_1G_1(x)+\alpha_2G_2(x)+…+\alpha_{m-1}G_{m-1}(x)$$</p>
-<p>在第$m$轮迭代得到$\alpha_m$，$G_m(x)$和$f_m(x)$.<br>$$f_m(x)=f_{m-1}(x)+\alpha_mG_m(x)$$</p>
-<p>目标是使用前向算法得到$\alpha_m$和$G_m(x)$是的$f_m(x)$最小化<br>$$(\alpha_m,G_m(x))=arg\underset{\alpha,G}{min}\sum_{i=1}^{N}exp(-y_i(f_{m-1}(x_i)+\alpha G(x_i)))$$<br>此式又可以表示为<br>$$(\alpha_m,G_m(x))=arg\underset{\alpha,G}{min}\sum_{i=1}^{N}w_{mi}exp(-y_i\alpha G(x_i))$$<br>其中$w_{mi}=exp(-y_if_{m-1}(x_i))$，不依赖$\alpha$和$G$，所以其与最小化无关，但是它依赖$f_{m-1}(x)$，随着每一轮迭代而发生变化。</p>
-<p>可以证明使上式最小化的$\alpha_m^*$和$G_m^*(x)$就是AdaBoost算法中的$\alpha_m$和$G_m(x)$。<br>首先，求$G_m^*(x)$。对任意的$\alpha&gt;0$，<br>$$G_m^*(x)=arg\underset{G}{min}\sum_{i=1}^{N}w_{mi}I(y_i\neq G(x_i))$$<br>此即为AdaBoost算法的基分类器，因为它是是的第$m$轮加权训练数据分类误差率最小的基分类器。</p>
-<p>再求$\alpha_m^*$，<br>$$\sum_{i=1}^{N}w_{mi}exp(-y_i\alpha G(x_i))=(e^\alpha -e^{-\alpha})\sum_{i=1}^{N}w_{mi}I(y_i\neq G(x_i))+e^{-\alpha}\sum_{i=1}^{N}w_{mi}$$</p>
-<p>将$G_m^*(x)$带入上式，并对$\alpha$求导，令其导数为零，可解得<br>$$\alpha_m^*=\frac{1}{2}ln\frac{1-e_m}{e_m}$$<br>其中$e_m$为分类误差率<br>$$e_m=\sum_{i=1}^{N}w_{mi}I(y_i\neq G_m(x_i))$$<br>这与AdaBoost算法中的$\alpha$完全一致。<br>最后再看权值更新，由<br>$$f_m(x)=f_{m-1}(x)+\alpha <em>mG_m(x)$$<br>以及$w</em>{mi}=exp(-y_if_{m-1}(x_i))$，可得<br>$$w_{m+1,i}=w_{mi}exp(-y_i \alpha_m G_m(x))$$<br>这与AdaBoost中的权重更新公式只相差一个归一化因子，因而是等价的。  </p>
+<p>(3) 得到加法模型为</p>
+<script type="math/tex; mode=display">f(x) = f_M(x)=\sum_{m=1}^{M}\beta _mb(x;\gamma _m)</script><p>接下来将证明，当前行分布算法的损失函数是指数损失函数$L(y,f(x))=exp(-yf(x))$时，其学习的具体操作等价于AdaBoost算法学习的具体操作。</p>
+<p>假设经过$m-1$轮迭代的前向分布算法已经得到$f_{m-1}(x)$:</p>
+<script type="math/tex; mode=display">f_{m-1}(x)=\alpha_1G_1(x)+\alpha_2G_2(x)+...+\alpha_{m-1}G_{m-1}(x)</script><p>在第$m$轮迭代得到$\alpha_m$，$G_m(x)$和$f_m(x)$.</p>
+<script type="math/tex; mode=display">f_m(x)=f_{m-1}(x)+\alpha_mG_m(x)</script><p>目标是使用前向算法得到$\alpha_m$和$G_m(x)$是的$f_m(x)$最小化</p>
+<script type="math/tex; mode=display">(\alpha_m,G_m(x))=arg\underset{\alpha,G}{min}\sum_{i=1}^{N}exp(-y_i(f_{m-1}(x_i)+\alpha G(x_i)))</script><p>此式又可以表示为</p>
+<script type="math/tex; mode=display">(\alpha_m,G_m(x))=arg\underset{\alpha,G}{min}\sum_{i=1}^{N}w_{mi}exp(-y_i\alpha G(x_i))</script><p>其中$w_{mi}=exp(-y_if_{m-1}(x_i))$，不依赖$\alpha$和$G$，所以其与最小化无关，但是它依赖$f_{m-1}(x)$，随着每一轮迭代而发生变化。</p>
+<p>可以证明使上式最小化的$\alpha_m^*$和$G_m^*(x)$就是AdaBoost算法中的$\alpha_m$和$G_m(x)$。<br>首先，求$G_m^*(x)$。对任意的$\alpha&gt;0$，</p>
+<script type="math/tex; mode=display">G_m^*(x)=arg\underset{G}{min}\sum_{i=1}^{N}w_{mi}I(y_i\neq G(x_i))</script><p>此即为AdaBoost算法的基分类器，因为它是是的第$m$轮加权训练数据分类误差率最小的基分类器。</p>
+<p>再求$\alpha_m^*$，</p>
+<script type="math/tex; mode=display">\sum_{i=1}^{N}w_{mi}exp(-y_i\alpha G(x_i))=(e^\alpha -e^{-\alpha})\sum_{i=1}^{N}w_{mi}I(y_i\neq G(x_i))+e^{-\alpha}\sum_{i=1}^{N}w_{mi}</script><p>将$G_m^*(x)$带入上式，并对$\alpha$求导，令其导数为零，可解得</p>
+<script type="math/tex; mode=display">\alpha_m^*=\frac{1}{2}ln\frac{1-e_m}{e_m}</script><p>其中$e_m$为分类误差率</p>
+<script type="math/tex; mode=display">e_m=\sum_{i=1}^{N}w_{mi}I(y_i\neq G_m(x_i))</script><p>这与AdaBoost算法中的$\alpha$完全一致。<br>最后再看权值更新，由</p>
+<script type="math/tex; mode=display">f_m(x)=f_{m-1}(x)+\alpha _mG_m(x)</script><p>以及$w_{mi}=exp(-y_if_{m-1}(x_i))$，可得</p>
+<script type="math/tex; mode=display">w_{m+1,i}=w_{mi}exp(-y_i \alpha_m G_m(x))</script><p>这与AdaBoost中的权重更新公式只相差一个归一化因子，因而是等价的。  </p>
 
       
     </div>
@@ -493,7 +513,7 @@
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
-              <p class="site-author-name" itemprop="name">John Doe</p>
+              <p class="site-author-name" itemprop="name">vivid</p>
               <p class="site-description motion-element" itemprop="description"></p>
           </div>
 
@@ -559,7 +579,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一、AdaBoost"><span class="nav-number">1.</span> <span class="nav-text">一、AdaBoost</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#算法原理"><span class="nav-number">1.1.</span> <span class="nav-text">算法原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分析"><span class="nav-number">1.2.</span> <span class="nav-text">分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考文献"><span class="nav-number">2.</span> <span class="nav-text">参考文献</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#附录"><span class="nav-number">3.</span> <span class="nav-text">附录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前向分布算法"><span class="nav-number">3.0.1.</span> <span class="nav-text">前向分布算法</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、AdaBoost"><span class="nav-number">1.</span> <span class="nav-text">一、AdaBoost</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#算法原理"><span class="nav-number">1.1.</span> <span class="nav-text">算法原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分析"><span class="nav-number">1.2.</span> <span class="nav-text">分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-number">2.</span> <span class="nav-text">参考文献</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#附录"><span class="nav-number">3.</span> <span class="nav-text">附录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前向分布算法"><span class="nav-number">3.1.</span> <span class="nav-text">前向分布算法</span></a></li></ol></li></ol></div>
             
 
           </div>
@@ -583,7 +603,7 @@
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+  <span class="author" itemprop="copyrightHolder">vivid</span>
 
   
 </div>
@@ -766,6 +786,28 @@
   
 
   
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
 
   
 

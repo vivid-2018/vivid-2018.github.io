@@ -90,7 +90,7 @@
 <meta property="og:image" content="http://yoursite.com/Figs/model.png">
 <meta property="og:image" content="http://yoursite.com/Figs/cbow.png">
 <meta property="og:image" content="http://yoursite.com/Figs/skip_gram.png">
-<meta property="og:updated_time" content="2019-08-31T16:48:00.000Z">
+<meta property="og:updated_time" content="2019-09-05T09:09:15.867Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="word2vec原理总结">
 <meta name="twitter:description" content="word2vec是一款学习词向量的工具，由于其作者在相应的论文里面没有提到太多的算法细节，为了能够更深一层的理解其中的原理和细节，我在网上搜索了不少资料，也学习了源码，在这个过程中感觉获益良多，于是整理成文，以加强理解与记忆。本文较多得参考了如下资料，在此表示衷心的感谢。 word2vec中的数学原理 刘建平Pinard的博客园 word2vec源码 词向量既然word2vec是一款学习词向量的工">
@@ -260,7 +260,7 @@
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/16/word2vec原理总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
+      <meta itemprop="name" content="vivid">
       <meta itemprop="description" content>
       <meta itemprop="image" content="/images/avatar.gif">
     </span>
@@ -354,68 +354,60 @@
 <p>一种很好理解的词向量是 <strong>One-hot</strong>向量，即用一个长度为\(|\mathcal{D}|\)的向量表示词，每个向量的所有分量中只有一个是1，其他的全是0，不同的词对应的词向量中为1的分量所在的索引不同。这种表示方法有一些弊端，如：1）向量的维度过大，一般\(|\mathcal{D}|\)为数万甚至数十万，容易导致维灾难。2）这种词向量的表达能力受限，词表中任意两个词对应的词向量都是正交的，因而它没有办法表达词与词之间的相似性。</p>
 <p>一种更为科学的表示方法是用一个维度更小的向量来表示词，通过训练将词表中的词映射称维度更小的密集向量，称之为<strong>Distribuited Representation</strong>，于是每一个词都对应一个词向量，也可以视为空间中的一个点，点与点之间的距离则可以作为词与词在语法或者语言上的相似性的一种度量。</p>
 <p>而word2vec正是一个学习<strong>Distribuited Representation</strong>的工具包，为了方便，下文中如果没有特殊说明，词向量指的都是<strong>Distribuited Representation</strong>。</p>
-<h2 id="CBOW和Skip-gram模型"><a href="#CBOW和Skip-gram模型" class="headerlink" title="CBOW和Skip-gram模型"></a>CBOW和Skip-gram模型</h2><p>上文提到了什么是词向量，却没有解决如何学习以获取词向量的问题。本节介绍word2vec中用到的两个重要的模型–CBOW模型(Continuous Bag-of-Words Model)和Skip-gram模型(Continuous Skip-gram Model)。</p>
+<h2 id="CBOW和Skip-gram模型"><a href="#CBOW和Skip-gram模型" class="headerlink" title="CBOW和Skip-gram模型"></a>CBOW和Skip-gram模型</h2><p>上文提到了什么是词向量，却没有解决如何学习以获取词向量的问题。本节介绍word2vec中用到的两个重要的模型—CBOW模型(Continuous Bag-of-Words Model)和Skip-gram模型(Continuous Skip-gram Model)。</p>
 <p>要想训练得到好的词向量，首先得有所谓的语料库，通俗的来讲就是一个个的句子。</p>
 <p>对于语料库(记为\(\mathcal{C}\))中的每一个词\(w(t)\)，取w周围的若干个词构成\(w\)的语境词，记为\(Context(w)=(…,w(t-1),w(t+1),…)\)。其中CBOW模型通过语境词预测中心词，即通过\(Context(w)\)预测\(w\)，Skip-gram通过中心词预测语境词，即通过\(w\)预测\(Context(w)\)，模型的结构如下：</p>
 <p><img src="/Figs/model.png" alt="avatar"></p>
 <p>对于CBOW模型，通过语境词预测中心词，即可以认为是对\(p(w|Context(w))\)进行建模，对于Skip-gram模型，可以认为是对\(p(Context(w)|w)\)进行建模。</p>
 <p>最原始的CBOW和Skip-gram的输出层维度为\(|\mathcal{D}|\)，这个数值一般较大，会导致计算量以及模型的规模变大，于是在word2vec中，作者对两种模型分别给出了基于 <strong>Hierarchical Softmax</strong> 和 <strong>Negative Sampling</strong> 的优化，大大的降低了计算量，下面分别进行介绍。</p>
-<h2 id="Hierarchical-Softmax"><a href="#Hierarchical-Softmax" class="headerlink" title="Hierarchical Softmax"></a>Hierarchical Softmax</h2><p>####基于 <strong>Hierarchical Softmax</strong> 的CBOW模型</p>
-<p>对于CBOW模型，其包括三层，分别是输入层、投影层和输出层。对于训练样本(\(Context(w), w\))，假定\(Context(w)\)由中心词\(w\)前后各\(c\)个词，一共\(2c\)个词构成，不够的话，用固定向量进行padding。于是模型表示为：</p>
+<h2 id="Hierarchical-Softmax"><a href="#Hierarchical-Softmax" class="headerlink" title="Hierarchical Softmax"></a>Hierarchical Softmax</h2><h3 id="基于-Hierarchical-Softmax-的CBOW模型"><a href="#基于-Hierarchical-Softmax-的CBOW模型" class="headerlink" title="基于 Hierarchical Softmax 的CBOW模型"></a>基于 <strong>Hierarchical Softmax</strong> 的CBOW模型</h3><p>对于CBOW模型，其包括三层，分别是输入层、投影层和输出层。对于训练样本(\(Context(w), w\))，假定\(Context(w)\)由中心词\(w\)前后各\(c\)个词，一共\(2c\)个词构成，不够的话，用固定向量进行padding。于是模型表示为：</p>
 <p><img src="/Figs/cbow.png" alt="avatar"></p>
-<p>模型的输入为\(2c\)个词向量，投影层将\(2c\)个词向量进行求和：$$x_w=\sum _{i=1}^{2c}Context(w) _i$$<br>输出层对应一颗<strong>Huffman树</strong>，它以语料库中出现过的词作为叶子节点，以各词在语料库中出现的频次作为权重构建而成，此处规定权重较大的孩子节点为左孩子。对于<strong>Huffman树</strong>此处不做过多的讨论，之所以使用<strong>Huffman树</strong>是为了让高频词出现的位置离根节点更近，通过后文的讲解将看到，训练一次的计算量正比于中心词距离根节点的距离，于是使用Huffman树能显著的降低计算量。</p>
+<p>模型的输入为\(2c\)个词向量，投影层将\(2c\)个词向量进行求和：<script type="math/tex">x_w=\sum _{i=1}^{2c}Context(w) _i</script><br>输出层对应一颗<strong>Huffman树</strong>，它以语料库中出现过的词作为叶子节点，以各词在语料库中出现的频次作为权重构建而成，此处规定权重较大的孩子节点为左孩子。对于<strong>Huffman树</strong>此处不做过多的讨论，之所以使用<strong>Huffman树</strong>是为了让高频词出现的位置离根节点更近，通过后文的讲解将看到，训练一次的计算量正比于中心词距离根节点的距离，于是使用Huffman树能显著的降低计算量。</p>
 <p>考虑Huffman树中的某个叶子节点，其对应的词记为\(w\)，规定以下记号：</p>
 <ol>
 <li>\(p ^w\)：从根节点到\(w\)对应的节点的路径。</li>
 <li>\(l ^w\)：路径\(p ^w\)中节点的个数。</li>
 <li>\(p _i ^w\)：路径\(p ^w\)中的第\(i\)个节点，\(1 \leq i\leq l ^w\)。</li>
-<li>\(d _i ^w \in \{0,1\}\)：\(p _i ^w\)对应的Huffman编码，根节点不对应Huffman编码，\(2 \leq i\leq l ^w\)。</li>
+<li>\(d _i ^w \in \\{0,1\\}\)：\(p _i ^w\)对应的Huffman编码，根节点不对应Huffman编码，\(2 \leq i\leq l ^w\)。</li>
 <li>\(\theta _i ^w\)：\(p _i ^w\)对应向量，规定只有内部节点有，叶子节点只有其对应的词向量。\(1 \leq i \leq l ^w -1\)。</li>
 </ol>
 <p>有了上述记号，那么接下来讨论word2vec中基于Hierarchical Softmax的CBOW到底是如何对\(p(w|Context(w))\)进行建模的。</p>
-<p>对于词\(w\)，考虑从根节点到其对应的叶子节点的路径，每往下一层都会经历一次左右分支，每一次分支都可以视为一次二分类。既然是二分类与就要规定正负例，word2vec中规定Huffman编码为0的节点为正例，而将Huffman编码为1的节点规定为负例，即：<br>$$label(p _i ^w) = 1 - d _i ^w , i=2,3,…,l ^w-1$$</p>
-<p>当然这里只是word2vec里面的规定，反着规定完全OK。</p>
-<p>于是对于一个词\(w\)，其对应的路径中有\(l ^w-1\)个内部节点，每个节点对应一次二分类，\(p(w|Context(w))\)被定义为这\(l ^w-1\)个二分类问题出现相应类别的概率的乘积：<br>$$p(w|Context(w))= \prod _{i=1} ^{l^w-1} p(d _{i+1} ^w|x _w,\theta _i ^w)$$</p>
-<p>其中\(p(d _{i+1} ^w|x _w,\theta _i ^w)\)为第\(i\)次二分类，分到\(label(p _{i+1} ^w) = 1 - d _{i+1} ^w\)的概率。注意\(d _{i+1} ^w=1\)对应着负例，\(d _{i+1} ^w=0\)才对应正例。<br>于是：<br>$$p(d _{i+1} ^w|x _w,\theta _i ^w)=\begin{cases} sigmoid(x _w ^T \theta _i ^w) &amp; d _{i+1}=0 \<br>1-sigmoid(x _w ^T \theta _i ^w) &amp; d _{i+1}=1 \end{cases}$$</p>
-<p>写到一个方程例就是：<br>$$p(w|Context(w))=\prod _{i=1} ^{l^w-1}[sigmoid(x _w ^T \theta _i ^w)]^{1-d _{i+1}^w}[1-sigmoid(x _w ^T \theta _i ^w)] ^{d _{i+1}^w}$$</p>
-<p>利用最大似然估计的思想，可以使用<strong>梯度上升法</strong>不断的最大化对数似然函数\(logp(w|Context(w))\)，从何更新参数。word2vec使用的是随机梯度上升(对应于随机梯度下降)，一次更新只使用一个训练样本。</p>
-<p>记\(\mathcal{L}(x _w, \theta _i ^w)\)为对数似然，即：<br>$$\mathcal{L}(x _w, \theta _i ^w)=\sum _{i=1}^{l^w-1}[(1-d _{i+1}^w)log(sigmoid(x _w ^T \theta _i ^w))+d _{i+1}^wlog(1-sigmoid(x _w ^T \theta _i ^w))]$$</p>
-<p>$$\sigma (x) = sigmoid(x)$$</p>
-<p>注意<br>$$\frac{\partial log \sigma (x)}{\partial x} = 1-\sigma (x), \frac{\partial log(1- \sigma (x))}{\partial x} = -\sigma (x)$$<br>梯度求解如下：</p>
-<p>$$\frac{\partial \mathcal{L}(x _w, \theta _i ^w)}{\partial x _w} =\sum _{i=1}^{l^w-1}(1-d _{i+1} ^{w}-\sigma (x _w ^T \theta _i^w))\theta _i^w$$</p>
-<p>$$\frac{\partial \mathcal{L}(x _w, \theta _i ^w)}{\partial \theta _i ^w} =(1-d _{i+1} ^{w}-\sigma (x _w ^T \theta _i^w))x _w$$</p>
-<p>而\(x_w=\sum _{i=1}^{2c}Context(w) _i\)，所以直接将\(\frac{\partial \mathcal{L}(x _w, \theta _i ^w)}{\partial x _w}\)作为语境词的梯度，于是根据梯度上升，更新量为：</p>
-<p>$$\theta _i ^w :=\theta _i ^w+\alpha (1-d _{i+1} ^{w}-\sigma (x _w ^T \theta _i^w))x _w$$</p>
-<p>$$x _{\widehat{w}} :=x _{\widehat{w}} +\alpha \sum _{i=1}^{l^w-1}(1-d _{i+1} ^{w}-\sigma (x _w ^T \theta _i^w))\theta _i^w$$<br>其中\(\widehat{w}\)为语境词中的任意一个。</p>
+<p>对于词\(w\)，考虑从根节点到其对应的叶子节点的路径，每往下一层都会经历一次左右分支，每一次分支都可以视为一次二分类。既然是二分类与就要规定正负例，word2vec中规定Huffman编码为0的节点为正例，而将Huffman编码为1的节点规定为负例，即：</p>
+<script type="math/tex; mode=display">label(p _i ^w) = 1 - d _i ^w , i=2,3,...,l ^w-1</script><p>当然这里只是word2vec里面的规定，反着规定完全OK。</p>
+<p>于是对于一个词\(w\)，其对应的路径中有\(l ^w-1\)个内部节点，每个节点对应一次二分类，\(p(w|Context(w))\)被定义为这\(l ^w-1\)个二分类问题出现相应类别的概率的乘积：</p>
+<script type="math/tex; mode=display">p(w|Context(w))= \prod _{i=1} ^{l^w-1} p(d _{i+1} ^w|x _w,\theta _i ^w)</script><p>其中\(p(d _{i+1} ^w|x _w,\theta _i ^w)\)为第\(i\)次二分类，分到\(label(p _{i+1} ^w) = 1 - d _{i+1} ^w\)的概率。注意\(d _{i+1} ^w=1\)对应着负例，\(d _{i+1} ^w=0\)才对应正例。<br>于是：</p>
+<script type="math/tex; mode=display">p(d _{i+1} ^w|x _w,\theta _i ^w)=\begin{cases} sigmoid(x _w ^T \theta _i ^w) & d _{i+1}=0 \\\
+1-sigmoid(x _w ^T \theta _i ^w) & d _{i+1}=1 \end{cases}</script><p>写到一个方程例就是：</p>
+<script type="math/tex; mode=display">p(w|Context(w))=\prod _{i=1} ^{l^w-1}[sigmoid(x _w ^T \theta _i ^w)]^{1-d _{i+1}^w}[1-sigmoid(x _w ^T \theta _i ^w)] ^{d _{i+1}^w}</script><p>利用最大似然估计的思想，可以使用<strong>梯度上升法</strong>不断的最大化对数似然函数\(logp(w|Context(w))\)，从何更新参数。word2vec使用的是随机梯度上升(对应于随机梯度下降)，一次更新只使用一个训练样本。</p>
+<p>记\(\mathcal{L}(x _w, \theta _i ^w)\)为对数似然，即：</p>
+<script type="math/tex; mode=display">\mathcal{L}(x _w, \theta _i ^w)=\sum _{i=1}^{l^w-1}[(1-d _{i+1}^w)log(sigmoid(x _w ^T \theta _i ^w))+d _{i+1}^wlog(1-sigmoid(x _w ^T \theta _i ^w))]</script><script type="math/tex; mode=display">\sigma (x) = sigmoid(x)</script><p>注意</p>
+<script type="math/tex; mode=display">\frac{\partial log \sigma (x)}{\partial x} = 1-\sigma (x), \frac{\partial log(1- \sigma (x))}{\partial x} = -\sigma (x)</script><p>梯度求解如下：</p>
+<script type="math/tex; mode=display">\frac{\partial \mathcal{L}(x _w, \theta _i ^w)}{\partial x _w} =\sum _{i=1}^{l^w-1}(1-d _{i+1} ^{w}-\sigma (x _w ^T \theta _i^w))\theta _i^w</script><script type="math/tex; mode=display">\frac{\partial \mathcal{L}(x _w, \theta _i ^w)}{\partial \theta _i ^w} =(1-d _{i+1} ^{w}-\sigma (x _w ^T \theta _i^w))x _w</script><p>而\(x_w=\sum _{i=1}^{2c}Context(w) _i\)，所以直接将\(\frac{\partial \mathcal{L}(x _w, \theta _i ^w)}{\partial x _w}\)作为语境词的梯度，于是根据梯度上升，更新量为：</p>
+<script type="math/tex; mode=display">\theta _i ^w :=\theta _i ^w+\alpha (1-d _{i+1} ^{w}-\sigma (x _w ^T \theta _i^w))x _w</script><script type="math/tex; mode=display">x _{\widehat{w}} :=x _{\widehat{w}} +\alpha \sum _{i=1}^{l^w-1}(1-d _{i+1} ^{w}-\sigma (x _w ^T \theta _i^w))\theta _i^w</script><p>其中\(\widehat{w}\)为语境词中的任意一个。</p>
 <p>根据上式可以看到，一次更新会更新所有语境词对应的词向量和所有与中心词关联的内部节点对应的向量，中心词对应的词向量本身不会得到更新。</p>
-<p>####基于 <strong>Hierarchical Softmax</strong> 的Skip-gram模型</p>
-<p>Skip-gram模型通过中心词预测语境词，模型结构图如下：</p>
+<h3 id="基于-Hierarchical-Softmax-的Skip-gram模型"><a href="#基于-Hierarchical-Softmax-的Skip-gram模型" class="headerlink" title="基于 Hierarchical Softmax 的Skip-gram模型"></a>基于 <strong>Hierarchical Softmax</strong> 的Skip-gram模型</h3><p>Skip-gram模型通过中心词预测语境词，模型结构图如下：</p>
 <p><img src="/Figs/skip_gram.png" alt="avatar"></p>
 <p>与CBOW模型不同的是，skip-gram模型的训练样本的形式为\((w,context(w))\)，而输入层仅有一个词向量，投影层是恒等变换，输出层与CBOW模型类似仍然是一颗Huffman树。</p>
 <p>由于\(context(w)\)中可能有多个词，所以对于任意语境词\(u \in context(w)\)<br>\(p(u|w)\)应表示为：</p>
-<p>$$p(u|w)=\prod _{i=1} ^{l^u-1}p(d _{i+1}^u|v _w, \theta _i ^u)$$</p>
-<p>其中\(p(d _{i+1}^u|v _w, \theta _i ^u)\)表达式为：<br>$$p(d _{i+1}^u|v _w, \theta _i ^u) = [\sigma (v _m^T\theta _i^u)]^{1-d _{i+1}^u}[1-\sigma (v _m^T\theta _i^u)]^{d _{i+1}^u}$$</p>
-<p>同样地，用最大似然估计，梯度上升最大化似然函数以更新参数。<br>求导以及参数更新公式完全类似于CBOW模型：<br>$$\frac{\partial \mathcal{L}(v _w, \theta _i ^u)}{\partial v _w} =\sum _{i=1}^{l^u-1}(1-d _{i+1} ^{u}-\sigma (v _w ^T \theta _i^u))\theta _i^u$$</p>
-<p>$$\frac{\partial \mathcal{L}(v _w, \theta _i ^u)}{\partial \theta _i ^u} =(1-d _{i+1} ^{u}-\sigma (v _w ^T \theta _i^u))v _w$$</p>
-<p>$$\theta _i ^u :=\theta _i ^u+\alpha (1-d _{i+1} ^{u}-\sigma (v _w ^T \theta _i^u))v _w$$</p>
-<p>$$v _{w} :=v _{w} +\alpha \sum _{i=1}^{l^u-1}(1-d _{i+1} ^{u}-\sigma (v _w ^T \theta _i^u))\theta _i^u$$</p>
-<p>从更新的公式可以看到，一次更新只会更新内部结点对应的词向量(\(\theta\))和中心词\(w\)对应的词向量。所以如果使用以上的公式进行更新，那么在一个窗口内，得到的样本(\(w, context(w)\))中，每一次更新都只有\(w\)的词向量能够得到更新。考虑到上下文是相互的，\(u\)是\(w\)的语境词的同时，\(w\)也是\(u\)的语境词，为了让训练更加的均衡，word2vec中使用\(p(w|u)\)来进行更新，这样做的好处就是在一个窗口内，可以更新\(2c\)个词的词向量。</p>
+<script type="math/tex; mode=display">p(u|w)=\prod _{i=1} ^{l^u-1}p(d _{i+1}^u|v _w, \theta _i ^u)</script><p>其中\(p(d _{i+1}^u|v _w, \theta _i ^u)\)表达式为：</p>
+<script type="math/tex; mode=display">p(d _{i+1}^u|v _w, \theta _i ^u) = [\sigma (v _m^T\theta _i^u)]^{1-d _{i+1}^u}[1-\sigma (v _m^T\theta _i^u)]^{d _{i+1}^u}</script><p>同样地，用最大似然估计，梯度上升最大化似然函数以更新参数。<br>求导以及参数更新公式完全类似于CBOW模型：</p>
+<script type="math/tex; mode=display">\frac{\partial \mathcal{L}(v _w, \theta _i ^u)}{\partial v _w} =\sum _{i=1}^{l^u-1}(1-d _{i+1} ^{u}-\sigma (v _w ^T \theta _i^u))\theta _i^u</script><script type="math/tex; mode=display">\frac{\partial \mathcal{L}(v _w, \theta _i ^u)}{\partial \theta _i ^u} =(1-d _{i+1} ^{u}-\sigma (v _w ^T \theta _i^u))v _w</script><script type="math/tex; mode=display">\theta _i ^u :=\theta _i ^u+\alpha (1-d _{i+1} ^{u}-\sigma (v _w ^T \theta _i^u))v _w</script><script type="math/tex; mode=display">v _{w} :=v _{w} +\alpha \sum _{i=1}^{l^u-1}(1-d _{i+1} ^{u}-\sigma (v _w ^T \theta _i^u))\theta _i^u</script><p>从更新的公式可以看到，一次更新只会更新内部结点对应的词向量(\(\theta\))和中心词\(w\)对应的词向量。所以如果使用以上的公式进行更新，那么在一个窗口内，得到的样本(\(w, context(w)\))中，每一次更新都只有\(w\)的词向量能够得到更新。考虑到上下文是相互的，\(u\)是\(w\)的语境词的同时，\(w\)也是\(u\)的语境词，为了让训练更加的均衡，word2vec中使用\(p(w|u)\)来进行更新，这样做的好处就是在一个窗口内，可以更新\(2c\)个词的词向量。</p>
 <h2 id="Negative-Sampling"><a href="#Negative-Sampling" class="headerlink" title="Negative Sampling"></a>Negative Sampling</h2><p>Hierarchical Softmax用Huffman树代替传统的全连接神经网络，在一定程度上减少了计算量，但是构建Huffman树毕竟有一定的开销，能不能不搞这么复杂呢？相比之下Negative Sampling抛弃了复杂的Huffman树，而是使用更为简单的带权负采样的方法，也能大幅度减小计算量。接下来就来看看基于<strong>Negative Sampling</strong>的模型又是如何设计的。</p>
-<h4 id="基于Negative-Sampling的CBOW模型"><a href="#基于Negative-Sampling的CBOW模型" class="headerlink" title="基于Negative Sampling的CBOW模型"></a>基于Negative Sampling的CBOW模型</h4><p>CBOW模型使用语境词预测中心词，那么对于语料库中的一个样本(\(context(w),w\))就可以视为一个正样本，对于语料库的其他词\(u\)就构成的样本(\(context(w),u\))就可以视为一个负样本。那么问题来了，负样本也太多了吧，于是Negative Sampling就从这些负样本中给予一定的规则，采样出一个负样本子集\(NEG(w)\)，具体的采样方法后文再介绍。</p>
+<h3 id="基于Negative-Sampling的CBOW模型"><a href="#基于Negative-Sampling的CBOW模型" class="headerlink" title="基于Negative Sampling的CBOW模型"></a>基于Negative Sampling的CBOW模型</h3><p>CBOW模型使用语境词预测中心词，那么对于语料库中的一个样本(\(context(w),w\))就可以视为一个正样本，对于语料库的其他词\(u\)就构成的样本(\(context(w),u\))就可以视为一个负样本。那么问题来了，负样本也太多了吧，于是Negative Sampling就从这些负样本中给予一定的规则，采样出一个负样本子集\(NEG(w)\)，具体的采样方法后文再介绍。</p>
 <p>为了方便，将正样本\(w\)记为\(w _0\)，将负样本记为\(w _1\)，\(w _2\)， …</p>
 <p>对于正样本，我们希望最大化概率：</p>
-<p>$$p(context(w), w _0) = \sigma (x _w^T\theta^{w _0})$$</p>
-<p>对于负样本，我们希望最小化：<br>$$p(context(w), w _i) = \sigma (x _w^T\theta^{w _i}), i = 1,2,…,|NEG(w)|$$</p>
-<p>综合起来，我们希望最大化的目标可表示为：</p>
-<p>$$\prod _{i=0}^{|NEG(w)|}[\sigma (x _w^T\theta^{w _i})]^{y _i}[1-\sigma (x _w^T\theta^{w _i})]^{1-y _i}$$</p>
-<p>其中：<br>$$y_i = \begin{cases}<br>1 &amp; i  = 0 \<br>0 &amp; others<br>\end{cases}$$</p>
-<p>于是对数似然函数为：<br>$$L=\sum _{i=0}^{|NEG(w)|}[y _ilog(\sigma (x _w^T\theta^{w _i}))+(1-y _i)log(1-\sigma (x _w^T\theta^{w _i})]$$</p>
-<p>相应的梯度为：<br>$$\frac{\partial L}{\partial x _w} = \sum _{i=0}^{|NEG(w)|}(y _i - \sigma (x _w^T\theta^{w _i})) \theta^{w _i}$$</p>
-<p>$$\frac{\partial L}{\partial \theta ^{w _i}} = (y _i - \sigma (x _w^T\theta^{w _i})) x _w$$</p>
-<h4 id="基于Negative-Sampling的skip-gram模型"><a href="#基于Negative-Sampling的skip-gram模型" class="headerlink" title="基于Negative Sampling的skip-gram模型"></a>基于Negative Sampling的skip-gram模型</h4><p>跟基于Hierarchical Softmax的skip-gram模型类似，基于Negative Sampling的skip-gram模型在训练的时候也是通过\(p(u|w)\)，来进行训练的，这样做的好处就是在一个窗口中可以让多个词的词向量得到训练。</p>
+<script type="math/tex; mode=display">p(context(w), w _0) = \sigma (x _w^T\theta^{w _0})</script><p>对于负样本，我们希望最小化：</p>
+<script type="math/tex; mode=display">p(context(w), w _i) = \sigma (x _w^T\theta^{w _i}), i = 1,2,...,|NEG(w)|</script><p>综合起来，我们希望最大化的目标可表示为：</p>
+<script type="math/tex; mode=display">\prod _{i=0}^{|NEG(w)|}[\sigma (x _w^T\theta^{w _i})]^{y _i}[1-\sigma (x _w^T\theta^{w _i})]^{1-y _i}</script><p>其中：</p>
+<script type="math/tex; mode=display">y_i = \begin{cases}
+1 & i  = 0 \\\
+0 & others 
+\end{cases}</script><p>于是对数似然函数为：</p>
+<script type="math/tex; mode=display">L=\sum _{i=0}^{|NEG(w)|}[y _ilog(\sigma (x _w^T\theta^{w _i}))+(1-y _i)log(1-\sigma (x _w^T\theta^{w _i})]</script><p>相应的梯度为：</p>
+<script type="math/tex; mode=display">\frac{\partial L}{\partial x _w} = \sum _{i=0}^{|NEG(w)|}(y _i - \sigma (x _w^T\theta^{w _i})) \theta^{w _i}</script><script type="math/tex; mode=display">\frac{\partial L}{\partial \theta ^{w _i}} = (y _i - \sigma (x _w^T\theta^{w _i})) x _w</script><h3 id="基于Negative-Sampling的skip-gram模型"><a href="#基于Negative-Sampling的skip-gram模型" class="headerlink" title="基于Negative Sampling的skip-gram模型"></a>基于Negative Sampling的skip-gram模型</h3><p>跟基于Hierarchical Softmax的skip-gram模型类似，基于Negative Sampling的skip-gram模型在训练的时候也是通过\(p(u|w)\)，来进行训练的，这样做的好处就是在一个窗口中可以让多个词的词向量得到训练。</p>
 <p>与CBOW模型十分类似，只是公式中的\(x _w\)(多个语境词向量之和)改成\(v _w\)(中心词的词向量)，其他的完全一样，就不赘述了。</p>
-<h4 id="负采样方法"><a href="#负采样方法" class="headerlink" title="负采样方法"></a>负采样方法</h4><p>word2vec进行负采样的方法并不复杂，只是普通的带权负采样而已，权重跟该词在语料库中出现的频次的\(3/4\)次幂成正比，即：<br>$$weight(w) = \frac{count(w)^{3/4}}{\sum _{u \in \mathcal{D}} count(u)^{3/4}}$$</p>
-
+<h3 id="负采样方法"><a href="#负采样方法" class="headerlink" title="负采样方法"></a>负采样方法</h3><p>word2vec进行负采样的方法并不复杂，只是普通的带权负采样而已，权重跟该词在语料库中出现的频次的\(3/4\)次幂成正比，即：</p>
+<script type="math/tex; mode=display">weight(w) = \frac{count(w)^{3/4}}{\sum _{u \in \mathcal{D}} count(u)^{3/4}}</script>
       
     </div>
     
@@ -523,7 +515,7 @@
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
-              <p class="site-author-name" itemprop="name">John Doe</p>
+              <p class="site-author-name" itemprop="name">vivid</p>
               <p class="site-description motion-element" itemprop="description"></p>
           </div>
 
@@ -589,7 +581,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#词向量"><span class="nav-number">1.</span> <span class="nav-text">词向量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CBOW和Skip-gram模型"><span class="nav-number">2.</span> <span class="nav-text">CBOW和Skip-gram模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hierarchical-Softmax"><span class="nav-number">3.</span> <span class="nav-text">Hierarchical Softmax</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Negative-Sampling"><span class="nav-number">4.</span> <span class="nav-text">Negative Sampling</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#基于Negative-Sampling的CBOW模型"><span class="nav-number">4.0.1.</span> <span class="nav-text">基于Negative Sampling的CBOW模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#基于Negative-Sampling的skip-gram模型"><span class="nav-number">4.0.2.</span> <span class="nav-text">基于Negative Sampling的skip-gram模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#负采样方法"><span class="nav-number">4.0.3.</span> <span class="nav-text">负采样方法</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#词向量"><span class="nav-number">1.</span> <span class="nav-text">词向量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CBOW和Skip-gram模型"><span class="nav-number">2.</span> <span class="nav-text">CBOW和Skip-gram模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hierarchical-Softmax"><span class="nav-number">3.</span> <span class="nav-text">Hierarchical Softmax</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于-Hierarchical-Softmax-的CBOW模型"><span class="nav-number">3.1.</span> <span class="nav-text">基于 Hierarchical Softmax 的CBOW模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于-Hierarchical-Softmax-的Skip-gram模型"><span class="nav-number">3.2.</span> <span class="nav-text">基于 Hierarchical Softmax 的Skip-gram模型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Negative-Sampling"><span class="nav-number">4.</span> <span class="nav-text">Negative Sampling</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于Negative-Sampling的CBOW模型"><span class="nav-number">4.1.</span> <span class="nav-text">基于Negative Sampling的CBOW模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于Negative-Sampling的skip-gram模型"><span class="nav-number">4.2.</span> <span class="nav-text">基于Negative Sampling的skip-gram模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#负采样方法"><span class="nav-number">4.3.</span> <span class="nav-text">负采样方法</span></a></li></ol></li></ol></div>
             
 
           </div>
@@ -613,7 +605,7 @@
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+  <span class="author" itemprop="copyrightHolder">vivid</span>
 
   
 </div>
@@ -796,6 +788,28 @@
   
 
   
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
 
   
 

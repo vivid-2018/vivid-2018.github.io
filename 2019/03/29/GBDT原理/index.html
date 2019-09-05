@@ -79,18 +79,18 @@
 
 
 
-<meta name="description" content="GBDT算法原理GBDT是Boosting家族中的另一强大算法，其核心思想是训练一系列基学习器，后面的学习器拟合的是前一轮获得的学习器的负梯度。在详细讨论GBDT之前，我们先简单的讨论提升树模型。 提升树模型是一种加法模型，第$m$步的模型为$$F_m(x)=F_{m-1}(x)+f_m(x)$$其中$F_{m-1}(x)$为当前的模型，$f_m(x)$通过经验风险最小化确定$$\widehat{">
+<meta name="description" content="GBDT算法原理GBDT是Boosting家族中的另一强大算法，其核心思想是训练一系列基学习器，后面的学习器拟合的是前一轮获得的学习器的负梯度。在详细讨论GBDT之前，我们先简单的讨论提升树模型。 提升树模型是一种加法模型，第$m$步的模型为 F_m(x)=F_{m-1}(x)+f_m(x)其中$F_{m-1}(x)$为当前的模型，$f_m(x)$通过经验风险最小化确定 \widehat{f}\_">
 <meta name="keywords" content="机器学习">
 <meta property="og:type" content="article">
 <meta property="og:title" content="GBDT">
 <meta property="og:url" content="http://yoursite.com/2019/03/29/GBDT原理/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="GBDT算法原理GBDT是Boosting家族中的另一强大算法，其核心思想是训练一系列基学习器，后面的学习器拟合的是前一轮获得的学习器的负梯度。在详细讨论GBDT之前，我们先简单的讨论提升树模型。 提升树模型是一种加法模型，第$m$步的模型为$$F_m(x)=F_{m-1}(x)+f_m(x)$$其中$F_{m-1}(x)$为当前的模型，$f_m(x)$通过经验风险最小化确定$$\widehat{">
+<meta property="og:description" content="GBDT算法原理GBDT是Boosting家族中的另一强大算法，其核心思想是训练一系列基学习器，后面的学习器拟合的是前一轮获得的学习器的负梯度。在详细讨论GBDT之前，我们先简单的讨论提升树模型。 提升树模型是一种加法模型，第$m$步的模型为 F_m(x)=F_{m-1}(x)+f_m(x)其中$F_{m-1}(x)$为当前的模型，$f_m(x)$通过经验风险最小化确定 \widehat{f}\_">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-04-02T09:49:28.000Z">
+<meta property="og:updated_time" content="2019-09-05T09:15:33.649Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="GBDT">
-<meta name="twitter:description" content="GBDT算法原理GBDT是Boosting家族中的另一强大算法，其核心思想是训练一系列基学习器，后面的学习器拟合的是前一轮获得的学习器的负梯度。在详细讨论GBDT之前，我们先简单的讨论提升树模型。 提升树模型是一种加法模型，第$m$步的模型为$$F_m(x)=F_{m-1}(x)+f_m(x)$$其中$F_{m-1}(x)$为当前的模型，$f_m(x)$通过经验风险最小化确定$$\widehat{">
+<meta name="twitter:description" content="GBDT算法原理GBDT是Boosting家族中的另一强大算法，其核心思想是训练一系列基学习器，后面的学习器拟合的是前一轮获得的学习器的负梯度。在详细讨论GBDT之前，我们先简单的讨论提升树模型。 提升树模型是一种加法模型，第$m$步的模型为 F_m(x)=F_{m-1}(x)+f_m(x)其中$F_{m-1}(x)$为当前的模型，$f_m(x)$通过经验风险最小化确定 \widehat{f}\_">
 
 
 
@@ -256,7 +256,7 @@
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/29/GBDT原理/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
+      <meta itemprop="name" content="vivid">
       <meta itemprop="description" content>
       <meta itemprop="image" content="/images/avatar.gif">
     </span>
@@ -342,21 +342,27 @@
       
 
       
-        <h1 id="GBDT"><a href="#GBDT" class="headerlink" title="GBDT"></a>GBDT</h1><h2 id="算法原理"><a href="#算法原理" class="headerlink" title="算法原理"></a>算法原理</h2><p>GBDT是Boosting家族中的另一强大算法，其核心思想是训练一系列基学习器，后面的学习器拟合的是前一轮获得的学习器的负梯度。在详细讨论GBDT之前，我们先简单的讨论提升树模型。</p>
-<p>提升树模型是一种加法模型，第$m$步的模型为<br>$$F_m(x)=F_{m-1}(x)+f_m(x)$$<br>其中$F_{m-1}(x)$为当前的模型，$f_m(x)$通过经验风险最小化确定<br>$$\widehat{f}_m(x)=argmin_{f_m(x)}\sum_{i=1}^{m}L(y_i,F_{m-1}(x)+f_m(x))$$<br>其中$L(y,F(x))$为损失函数。<br>当面对回归问题，且以均方误差作为损失函数时，模型表现为残差拟合。</p>
-<p>假设有一回归问题，训练集表示为<br>$$T=\lbrace(x_1,y_1),(x_2,y_2),…,(x_m,y_m)\rbrace$$<br>(1) 初始化$F_0(x)=f_0(x)=0$<br>(2) for $k=1$ to $M$</p>
+        <h2 id="GBDT"><a href="#GBDT" class="headerlink" title="GBDT"></a>GBDT</h2><h3 id="算法原理"><a href="#算法原理" class="headerlink" title="算法原理"></a>算法原理</h3><p>GBDT是Boosting家族中的另一强大算法，其核心思想是训练一系列基学习器，后面的学习器拟合的是前一轮获得的学习器的负梯度。在详细讨论GBDT之前，我们先简单的讨论提升树模型。</p>
+<p>提升树模型是一种加法模型，第$m$步的模型为</p>
+<script type="math/tex; mode=display">F_m(x)=F_{m-1}(x)+f_m(x)</script><p>其中$F_{m-1}(x)$为当前的模型，$f_m(x)$通过经验风险最小化确定</p>
+<script type="math/tex; mode=display">\widehat{f}\_m(x)=argmin_{f_m(x)}\sum_{i=1}^{m}L(y_i,F_{m-1}(x)+f_m(x))</script><p>其中$L(y,F(x))$为损失函数。<br>当面对回归问题，且以均方误差作为损失函数时，模型表现为残差拟合。</p>
+<p>假设有一回归问题，训练集表示为</p>
+<script type="math/tex; mode=display">T=\lbrace(x_1,y_1),(x_2,y_2),...,(x_m,y_m)\rbrace</script><p>(1) 初始化$F_0(x)=f_0(x)=0$<br>(2) for $k=1$ to $M$</p>
 <ul>
-<li>计算各个样本的的残差<br>$$r_{ki}=y_i-F_{k-1}(x_i), i=1,2,…,m$$</li>
+<li>计算各个样本的的残差<script type="math/tex; mode=display">r_{ki}=y_i-F_{k-1}(x_i), i=1,2,...,m</script></li>
 <li>残差拟合，即用${(x_1,r_{k1}),(x_2,r_{k2}),…,(x_m,r_{km})}$学习一颗回归树，记为$f_k(x)$</li>
-<li>更新最终的学习器<br>$$F_k(x)=F_{k-1}(x)+f_k(x)$$<br>(3) 输出最终的学习器，即<br>$$F_M(x)=\sum_{k=1}^{M}f_k(x)$$</li>
+<li>更新最终的学习器<script type="math/tex; mode=display">F_k(x)=F_{k-1}(x)+f_k(x)</script>(3) 输出最终的学习器，即<script type="math/tex; mode=display">F_M(x)=\sum_{k=1}^{M}f_k(x)</script></li>
 </ul>
 <p>提升树的思想可以用一个通俗的例子解释，加入某人体重100斤，先用80斤拟合，得到残差为20斤，下一轮再用16斤拟合，残差变成4斤，下下轮再用3斤拟合，残差变成1斤，如此循环，直到达到指定的迭代轮数，或者触发其他的停止条件。</p>
-<h2 id="算法流程"><a href="#算法流程" class="headerlink" title="算法流程"></a>算法流程</h2><p>上面解释了当损失函数为均方误差时，每一步只需要拟合残差即可，但对于一般的损失函数而言，应该如何该如何拟合呢？为此大牛Freidman利用最速下降法的近似方法，提出了梯度提升算法，即利用损失函数的负梯度在当前模型的值作为拟合的目标，学习一颗回归树。<br>算法的具体流程如下：<br>(1) 初始化<br>$$F_0(x)=f_0(x)=argmin_c\sum_{i=1}^{m}L(y_i,c)$$<br>(2) for $k=1$ to $M$</p>
+<h3 id="算法流程"><a href="#算法流程" class="headerlink" title="算法流程"></a>算法流程</h3><p>上面解释了当损失函数为均方误差时，每一步只需要拟合残差即可，但对于一般的损失函数而言，应该如何该如何拟合呢？为此大牛Freidman利用最速下降法的近似方法，提出了梯度提升算法，即利用损失函数的负梯度在当前模型的值作为拟合的目标，学习一颗回归树。<br>算法的具体流程如下：<br>(1) 初始化</p>
+<script type="math/tex; mode=display">F_0(x)=f_0(x)=argmin_c\sum_{i=1}^{m}L(y_i,c)</script><p>(2) for $k=1$ to $M$</p>
 <ul>
-<li>计算负梯度<br>$$r_{ki}=-\left [ \frac{\partial L(y_i,f(x_i))}{\partial f(x_i)} \right ]<em>{f(x_i)=F</em>{k-1}(x_i)},i=1,2,…,m$$</li>
+<li>计算负梯度</li>
+</ul>
+<script type="math/tex; mode=display">r_{ki}=-\left [ \frac{\partial L(y_i,f(x_i))}{\partial f(x_i)} \right ]_{f(x_i)=F_{k-1}(x_i)},i=1,2,...,m</script><ul>
 <li>负梯度拟合，即用${(x_1,r_{k1}),(x_2,r_{k2}),…,(x_m,r_{km})}$学习一颗回归树，记为$f_k(x)$，设其叶节点为$R_{kj},j=1,2,…,J$</li>
-<li>确定各叶子对应的值<br>$$c_{kj}=argmin_c\sum_{x_i \in R_{kj}}L(y_i,F_{m-1}(x_i)+c),j=1,2,…,J$$</li>
-<li>更新<br>$$F_k(x)=F_{k-1}(x)+f_k(x)$$<br>(3) 组合得最终的学习器<br>$$F_M(x)=\sum_{k=1}^{M}f_k(x)=\sum_{k=1}^{M}\sum_{j=1}^{J}c_{mj}I(x\in R_{mj})$$</li>
+<li>确定各叶子对应的值<script type="math/tex; mode=display">c_{kj}=argmin_c\sum_{x_i \in R_{kj}}L(y_i,F_{m-1}(x_i)+c),j=1,2,...,J</script></li>
+<li>更新<script type="math/tex; mode=display">F_k(x)=F_{k-1}(x)+f_k(x)</script>(3) 组合得最终的学习器<script type="math/tex; mode=display">F_M(x)=\sum_{k=1}^{M}f_k(x)=\sum_{k=1}^{M}\sum_{j=1}^{J}c_{mj}I(x\in R_{mj})</script></li>
 </ul>
 <p>GBDT通过负梯度拟合的方法，对任意的损失函数均可进行优化(可导)，对于分类问题，且使用指数损失函数$L(y,f(x))=exp(-yf(x))$时，其即为AdaBoost算法。</p>
 <p>最后对GBDT算法的主要优缺点进行简单的总结<br><strong>GBDT的主要优点有</strong></p>
@@ -370,7 +376,7 @@
 <li>只能使用CART回归树作为基学习器，灵活性较差。</li>
 <li>由于弱学习器之间存在依赖关系，难以并行训练数据。当然这也是Boosting算法的通病。</li>
 </ol>
-<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ol>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ol>
 <li>李航 《统计学习方法》</li>
 <li>周志华 《机器学习》</li>
 <li><a href="https://www.cnblogs.com/pinard/p/6140514.html" target="_blank" rel="noopener">https://www.cnblogs.com/pinard/p/6133937.html</a></li>
@@ -484,7 +490,7 @@
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
-              <p class="site-author-name" itemprop="name">John Doe</p>
+              <p class="site-author-name" itemprop="name">vivid</p>
               <p class="site-description motion-element" itemprop="description"></p>
           </div>
 
@@ -550,7 +556,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#GBDT"><span class="nav-number">1.</span> <span class="nav-text">GBDT</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#算法原理"><span class="nav-number">1.1.</span> <span class="nav-text">算法原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#算法流程"><span class="nav-number">1.2.</span> <span class="nav-text">算法流程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考文献"><span class="nav-number">2.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#GBDT"><span class="nav-number">1.</span> <span class="nav-text">GBDT</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#算法原理"><span class="nav-number">1.1.</span> <span class="nav-text">算法原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#算法流程"><span class="nav-number">1.2.</span> <span class="nav-text">算法流程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-number">2.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
             
 
           </div>
@@ -574,7 +580,7 @@
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+  <span class="author" itemprop="copyrightHolder">vivid</span>
 
   
 </div>
@@ -757,6 +763,28 @@
   
 
   
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
 
   
 
