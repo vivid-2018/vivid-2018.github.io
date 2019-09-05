@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>LightGBM | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="四、LightGBMXGBoost的出现，让无数数据民工告别了传统的机器学习算法们：RF、GBM、SVM等等。然而历史的车轮总是滚滚向前，2016年底-2017年初，微软推出了新的boosting框架LightGBM，LightGBM以其更高的准确率，更低的内存使用，快的飞起的训练效率，大有取代XGBoost一统江湖地位之势。XGBoost已经如此优秀了，LightGBM又是如何更上一层楼的呢？">
+<meta name="keywords" content="机器学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LightGBM">
+<meta property="og:url" content="http://yoursite.com/2019/03/29/LightGBM原理/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="四、LightGBMXGBoost的出现，让无数数据民工告别了传统的机器学习算法们：RF、GBM、SVM等等。然而历史的车轮总是滚滚向前，2016年底-2017年初，微软推出了新的boosting框架LightGBM，LightGBM以其更高的准确率，更低的内存使用，快的飞起的训练效率，大有取代XGBoost一统江湖地位之势。XGBoost已经如此优秀了，LightGBM又是如何更上一层楼的呢？">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-04-02T09:50:30.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LightGBM">
+<meta name="twitter:description" content="四、LightGBMXGBoost的出现，让无数数据民工告别了传统的机器学习算法们：RF、GBM、SVM等等。然而历史的车轮总是滚滚向前，2016年底-2017年初，微软推出了新的boosting框架LightGBM，LightGBM以其更高的准确率，更低的内存使用，快的飞起的训练效率，大有取代XGBoost一统江湖地位之势。XGBoost已经如此优秀了，LightGBM又是如何更上一层楼的呢？">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-LightGBM原理" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/29/LightGBM原理/" class="article-date">
+  <time datetime="2019-03-28T16:00:00.000Z" itemprop="datePublished">2019-03-29</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/机器学习/">机器学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      LightGBM
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="四、LightGBM"><a href="#四、LightGBM" class="headerlink" title="四、LightGBM"></a>四、LightGBM</h1><p>XGBoost的出现，让无数数据民工告别了传统的机器学习算法们：RF、GBM、SVM等等。然而历史的车轮总是滚滚向前，2016年底-2017年初，微软推出了新的boosting框架LightGBM，LightGBM以其更高的准确率，更低的内存使用，快的飞起的训练效率，大有取代XGBoost一统江湖地位之势。XGBoost已经如此优秀了，LightGBM又是如何更上一层楼的呢？</p>
+<h2 id="GOSS-Gradient-based-One-Side-Sampling"><a href="#GOSS-Gradient-based-One-Side-Sampling" class="headerlink" title="GOSS(Gradient-based One-Side Sampling)"></a>GOSS(Gradient-based One-Side Sampling)</h2><p>GOSS是从减少训练样本的角度来是提高训练速度的。考虑到在GBDT中，一个样本的梯度可以为样本采样提供有用的信息。一个样本的梯度很小意味着该样本已经训练的很好了，能否在新一轮的学习器训练中不考虑这些已经训练的很好的样本呢？对此GOSS的做法是保留大梯度的样本，对小梯度样本进行采样，为了不破坏数据的分布，采样出的小梯度样本在贡献分裂收益的时候还要乘上一个因子，具体的GOSS算法工作流程如下：</p>
+<ol>
+<li>将样本按照其梯度的大小进行排序，</li>
+<li>选取梯度最大的$top a%$样本作为大梯度样本</li>
+<li>在剩下的小梯度样本中随机选$b%$的样本作为小梯度样本</li>
+<li>在计算信息收益时，小样本带来的收益再乘以因子$\frac{1-a}{b}$</li>
+</ol>
+<p>作者通过实验表明，GOSS不仅能带来训练速度的提高，也能提高准确率(跟随机梯度提升相比)。</p>
+<h2 id="EFB-Exclusive-Feature-Bundling"><a href="#EFB-Exclusive-Feature-Bundling" class="headerlink" title="EFB(Exclusive Feature Bundling)"></a>EFB(Exclusive Feature Bundling)</h2><p>EFB是从减少特征的数量角度来提高训练速度的。考虑到高维特征往往十分稀疏，这意味着有些特征不会或者说很少会同时取到非零值，能不能讲这些特征按照某种方法捆绑起来，当做一个特征处理呢？要完成这一任务有两个问题需要解决，首先是如何选择将哪些特征进行捆绑？其次是捆绑之后的特征怎么表示？</p>
+<p>对于第一个问题，作者的想法是把那些很少同时取非零值的特征捆绑在一起。首先建图，每一个特征在图中代表一个节点，节点之间的连接权重为相应特征的矛盾数(同时取非零值的样本数)。然后按照节点的度对特征降序排序，对于每一个特征，遍历已有的特征簇，如果发现把该特征加入到该簇中的矛盾数不超过某一阈值，则将该特征加入到该簇中。如果该特征不能加入任何一个已有的特征簇，则新建一个簇，将该特征加入到新建的簇中。</p>
+<p>建图的过程虽然耗时，但是只需要建立依次即可，此外作者也提出了不建图的方法。考虑到一个特征去非零值的数量越多，那么该特征就越有可能带来更多的矛盾，所以也可以将特征按照其取非零值的样本数量进行降序排序，其他的过程类似。</p>
+<p>至此第一个问题已经解决了，那如何解决第二个问题呢？即将多个特征捆绑在一起了之后，如何表示？考虑到在LightGBM中，各连续特征已经被离散化了，所以可以将各特征的取值平移到互不相见的bin中，然后用一个特征表示。举个例子<br>例如，现在讲A B C三个特征捆绑在一起了，A的取值为[0,5)，B的取值为[0,10)，C的取值为[0,15)，通过平移，将A B C三个特征表示成互补相交的bin，例如A表示为[0,5)，B表示为[5,15)，C表示为[15,30)。那么捆绑后的特征就可以用[0,30)上的一个值表示(ABC三个特征不冲突)。通过EFB，许多排他的特征就被捆绑成了更少的密集特征，这个大大减少的特征的数量。</p>
+<p>作者通过实验发现，EFB给训练速度带来的很大的提高(作者用的是dramatic)。</p>
+<h2 id="算法优化"><a href="#算法优化" class="headerlink" title="算法优化"></a>算法优化</h2><ul>
+<li>最优划分点的确定</li>
+</ul>
+<p>XGBoost中最优划分点的寻找本质上是基于预排序的方法实现的，寻找最优划分点的时间复杂可以表示为$O(data \times feature)$，此外预排序需要保存特征排序的结果，这又增加了内存的需求。而LightGBM使用了基于直方图的算法(Histogram)，其思想大致是把连续的特征分成$k$个离散值，同时构造宽度为$k$的直方图，遍历数据时，根据离散化后的值作为索引在直方图中累积统计量，当遍历一次数据后，直方图累积了需要的统计量，然后根据直方图的离散值，遍历寻找最优的分割点。直方图一旦建立起来之后，寻找最优划分点的时间复杂度变成$O(bin \times feature)$。同时在分裂节点得到左右两个孩子节点时，只需要统计其中一个孩子的直方图中累计统计量，另一个孩子的直方图可以直接通过直方图做差获得。</p>
+<p>当然，在XGBoost的后续版本中，也支持使用直方图算法了(通过参数$tree_method$指定)。</p>
+<ul>
+<li>基于$leaf-wise$的叶子生长策略</li>
+</ul>
+<p>XGBoost最初采用的是$level-wise$策略，依次分裂同一层叶子节点，它不加区分的对待同一层的叶子，带来了很多没必要的开销，有可能其中的有些分裂带来的收益并不大，没有必要进行分裂。</p>
+<p>LightGBM采用$leaf-wise$的分裂策略，即在所有的叶子节点中找到分裂收益最大的节点进行分裂，相当于LightGBM采用的是$best-first$的思想，在大多数情况下可以降低更多的误差，得到更好的精度。缺点是有可能产生较深的树，容易过拟合，可以通过限制最大深度来进行一定的缓解。</p>
+<p>当然，在XGBoost的后续版本中，也支持$leaf-wise$的分裂策略，通过参数$grow_policy$指定。</p>
+<p><strong>LightGBM的优点</strong><br>可以说LightGBM最大的有点就是快。相比如XGBoost，它训练的准确率相当，但训练的速度比XGBoost要快很多，当然XGBoost也在不断的进步，根据本人的经验，训练同样的数据，XGBoost消耗的时间大概是LightGBM的三倍。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文总结了Boosting算法家族的LightGBM。Boosting系列的框架性能越来越优化，给我们的学习和生活带来了更多的遍历，当然技术总是不断地进步，相信未来一定会有更优秀的算法，性能更高的框架诞生，我们拭目以待。</p>
+<p>最后将GBDT、XGBoost以及LightGBM进行简单的对比。</p>
+<p><strong><em>XGBoost VS LightGBM</em></strong></p>
+<ol>
+<li>最优划分点的寻找方式不同，xgb是基于预排序，lgb基于直方图。(xgb现在也支持直方图)</li>
+<li>叶子增长的方式不同，xgb是level-wise，lgb是leaf-wise。(xgb现在也支持leaf-wise)</li>
+<li>lgb梯度大小，对样本进行单边采样(样本分成梯度大与梯度小两边)，xgb只支持随机样本采样。</li>
+<li>都擅长处理稀疏特征，lgb通过特征捆绑，xgb为缺失值学习默认方向。</li>
+<li>xgb不能直接处理类别特征(需要one-hot)，lgb可以直接处理类别特征。</li>
+<li>都支持并行计算，xgb很快，lgb更快。</li>
+</ol>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ol>
+<li><a href="https://xgboost.readthedocs.io/en/latest/" target="_blank" rel="noopener">XGBoost文档</a> </li>
+<li><a href="https://lightgbm.readthedocs.io/en/latest/" target="_blank" rel="noopener">LightGBM文档</a></li>
+<li>LightGBM: A Highly Efficient Gradient Boosting Decision Tree</li>
+<li>XGBoost: A Scalable Tree Boosting System</li>
+<li><a href="https://blog.csdn.net/niaolianjiulin/article/details/76584785" target="_blank" rel="noopener">https://blog.csdn.net/niaolianjiulin/article/details/76584785</a></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/29/LightGBM原理/" data-id="ck06esb3h0005osup1oeeohos" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/机器学习/">机器学习</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/03/29/GBDT原理/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          GBDT
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/03/29/XGBoost原理/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">XGBoost</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/机器学习/">机器学习</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/机器学习/">机器学习</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/机器学习/" style="font-size: 10px;">机器学习</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/09/01/post-name/">post_name</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/19/ESMM模型/">ESMM模型</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/16/word2vec原理总结/">word2vec原理总结</a>
+          </li>
+        
+          <li>
+            <a href="/2019/03/29/GBDT原理/">GBDT</a>
+          </li>
+        
+          <li>
+            <a href="/2019/03/29/LightGBM原理/">LightGBM</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

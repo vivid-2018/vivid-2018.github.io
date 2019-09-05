@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>XGBoost | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="XGBoostGBDT由于其强大的性能，在机器学习、数据挖掘中得到广泛的应用，其各种改进版本也层出不穷，其中由陈天奇博士提出的XGBoost可以说是最著名的改版之一。XGBoost由于其更强大的效果，更快的运行速度，一度成为各类数据挖掘竞赛的大杀器，接下来让我们一起来看看XGBoost究竟是如何做到的。还是假设训练集表示为$$D=\lbrace(x_1,y_1),(x_2,y_2),…,(x_m,">
+<meta name="keywords" content="机器学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XGBoost">
+<meta property="og:url" content="http://yoursite.com/2019/03/29/XGBoost原理/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="XGBoostGBDT由于其强大的性能，在机器学习、数据挖掘中得到广泛的应用，其各种改进版本也层出不穷，其中由陈天奇博士提出的XGBoost可以说是最著名的改版之一。XGBoost由于其更强大的效果，更快的运行速度，一度成为各类数据挖掘竞赛的大杀器，接下来让我们一起来看看XGBoost究竟是如何做到的。还是假设训练集表示为$$D=\lbrace(x_1,y_1),(x_2,y_2),…,(x_m,">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-04-02T09:49:52.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="XGBoost">
+<meta name="twitter:description" content="XGBoostGBDT由于其强大的性能，在机器学习、数据挖掘中得到广泛的应用，其各种改进版本也层出不穷，其中由陈天奇博士提出的XGBoost可以说是最著名的改版之一。XGBoost由于其更强大的效果，更快的运行速度，一度成为各类数据挖掘竞赛的大杀器，接下来让我们一起来看看XGBoost究竟是如何做到的。还是假设训练集表示为$$D=\lbrace(x_1,y_1),(x_2,y_2),…,(x_m,">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-XGBoost原理" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/29/XGBoost原理/" class="article-date">
+  <time datetime="2019-03-28T16:00:00.000Z" itemprop="datePublished">2019-03-29</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/机器学习/">机器学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      XGBoost
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="XGBoost"><a href="#XGBoost" class="headerlink" title="XGBoost"></a>XGBoost</h1><p>GBDT由于其强大的性能，在机器学习、数据挖掘中得到广泛的应用，其各种改进版本也层出不穷，其中由陈天奇博士提出的XGBoost可以说是最著名的改版之一。XGBoost由于其更强大的效果，更快的运行速度，一度成为各类数据挖掘竞赛的大杀器，接下来让我们一起来看看XGBoost究竟是如何做到的。还是假设训练集表示为<br>$$D=\lbrace(x_1,y_1),(x_2,y_2),…,(x_m,y_m)\rbrace$$</p>
+<h2 id="算法原理"><a href="#算法原理" class="headerlink" title="算法原理"></a>算法原理</h2><p>XGBoost在损失函数中显式地加入了正则化项，在学习第$t$个基学习器时，其优化的目标表示为<br>$$\mathcal{L}^{(t)}=\sum_{i=1}^{m}L(y_i,\hat{y}<em>i^{(t-1)}+f_t(x_i))+\Omega(f_t)$$<br>其中$L(y_i,\hat{y}_i)$代表没有正则项的损失函数,$\Omega(f_t)$代表正则化项<br>$$\Omega(f_t)=\gamma T+\frac{1}{2}\lambda \left | w \right |^2$$<br>其中$T$表示$f_t$中的节点个数，第一项控制树不能生长的过于复杂，第二项可以看做$L2$正则化项。<br>对优化目标进行泰勒展开到二阶<br>$$\mathcal{L}^{(t)}\simeq \sum</em>{i=1}^{m}[L(y_i,\hat{y}<em>i^{(t-1)})+g_if_t(x_i)+\frac{1}{2}h_if_t^2(x_i)]+\Omega(f_t)$$<br>其中$g_i=\partial</em>{\hat{y}^{(t-1)}}L(y_i,\hat{y}^{(t-1)})$，$h_i=\partial_{\hat{y}^{(t-1)}}^2L(y_i,\hat{y}^{(t-1)})$。考虑到在学习第$t$个基学习器时，前面的基学习器已经确定了，所以$L(y_i,\hat{y_i}^{(t-1)})$是一个常数项，略去常数项，于是优化目标简化为<br>$$\tilde{\mathcal{L}}^{(t)}=\sum_{i=1}^{m}[g_if_t(x_i)+\frac{1}{2}h_if_t^2(x_i)]+\Omega(f_t)$$<br>记$I_j=\lbrace i|q(x_i)=j \rbrace$表示落入叶子节点$j$的训练样本的集合，$q$表示将样本映射到其落入的叶子节点的索引的映射。</p>
+<p>将正则化项带入优化目标<br>$$\tilde{\mathcal{L}}^{(t)}=\sum_{i=1}^{m}[g_if_t(x_i)+\frac{1}{2}h_if_t^2(x_i)]+\gamma T+\frac{1}{2}\lambda \sum_{j=1}^{T}w_j^2$$<br>$$\tilde{\mathcal{L}}^{(t)}=\sum_{j=1}^{T}[(\sum_{i\in I_j}g_i)w_j+\frac{1}{2}(\sum_{i\in I_j}h_i+\lambda )w_j^2]+\gamma T$$<br>上面第一个式子是按训练样本求和，第二个式子按各叶子节点求和。</p>
+<p>到此，如果树的结构已经确定的，通过最小化上式，我们可以求解出叶子节点$j$对应的最优值应该为<br>$$w_j^*=-\frac{\sum_{i\in I_j}g_i}{\sum_{i\in I_j}h_i+\lambda}$$<br>于是相应的优化目标变为<br>$$\tilde{\mathcal{L}}^{(t)}(q)=-\frac{1}{2}\sum_{j=1}^{T}\frac{(\sum_{i\in I_j}g_i)^2}{\sum_{i\in I_j}h_i+\lambda}+\gamma T$$</p>
+<p>此式可以看做是树的结构$q$的得分，类似于学习决策树中的不纯度(信息熵，基尼系数)，我们总是希望找到一个划分，使得不纯度的降低最大，我们将不纯度的降低定义为该划分的收益。同样的，在这里我们也是想找到一个划分，使得其收益最大化。假设划分前节点中的样本集合为$I$，划分后左右子节点的样本集合分别为$I_1$，$I_2$。于是对于某一划分，其收益为<br>$$\mathcal{L}_{split}=\frac{1}{2}[\frac{G_L^2}{H_L+\lambda}+\frac{G_R^2}{H_R+\lambda}-\frac{(G_L+G_R)^2}{H_L+H_R+\lambda}]-\gamma $$</p>
+<p>其中$G_L=\sum_{i\in I_L}g_i$，$G_R=\sum_{i\in I_R}g_i$，$H_L = \sum_{i\in I_L}h_i$，$H_R = \sum_{i\in I_R}h_i$。</p>
+<p>于是XGBoost在学习基学习器的时候，只需按照上式，每次找到最优的划分，不断的生长决策树即可。</p>
+<h2 id="算法优化"><a href="#算法优化" class="headerlink" title="算法优化"></a>算法优化</h2><p>前面推导了XGBoost算法的原理，在工程实现上，XGBoost又做了很多优化，具体如下。</p>
+<ul>
+<li>支持收缩与列采样</li>
+</ul>
+<p>收缩即是新加的基学习器是在乘以一个收缩因子$\eta$之后再加到最终学习器中的，收缩因子类似于梯度下降中的学习率，它减小了每一棵数的影响，为后续的基学习器留下了空间，这有利于防止过拟合，提高模型的表达能力。</p>
+<p>列采样即是每一次在选择划分点的时候只考虑部分而非所有的特征，这不仅能降低计算量，也能防止过拟合，还能加快并行计算的速度。</p>
+<ul>
+<li>划分点的确定</li>
+</ul>
+<p>前面推导出了XGBoost评价一个划分好坏的指标，那么如何找到这么一个划分呢？传统上，划分点的确定主要通过暴力算法，即对所有特征特征(可能有特征采样)，按照该特征的取值，对训练样本进行排序，然后枚举所有划分点，计算器收益，选择最优的划分点进行划分。暴力方法非常的准确，但并不高效。</p>
+<p>如何根据分位数确定划分点呢？我们知道，特征的百分位数用于使候选节点均匀地分布在数据上。也就是在特征集上选取一个百分数，然后根据这个百分数来依次的选取候选节点。比如某个特征的样本点是1~100，特征的百分位数设为2%，则候选节点的选择就是100<em>0.02</em>1=2，4，…，100。记<br>$D_k = \lbrace(x_{1k,h1}),(x_{2k},h_2),…,(x_{mk},h_m)\rbrace$表示第$k$个特征的取值和相应样本的二阶梯度，定义函数$r_k$<br>$$r_k(z)=\frac{1}{\sum_{(x,h)\in D_k}h}\sum_{(x,h)\in D_k,x&lt; z}h$$<br>此函数表示第$k$个特征的取值小于$z$的样本的比例，样本的权重为其二阶梯度。于是就可以找到一系列的候选划分点$\lbrace s_{k1},s_{k2},…,s_{kl}\rbrace$，使得<br>$$|r_k(s_{k,j})-r_k(s_{k,j+1})|&lt; \epsilon,s_{k1}=min_ix_{ik},s_{kl}=max_ix_{ik}$$<br>$\epsilon$是一个近似因子，由人工指定，一般指定之后会有大约$\frac{1}{\epsilon}$个候选划分点。</p>
+<p>这一块通俗来讲，就是选取一系列的候选划分点，这一系列的候选划分点将样本分成了一个一个簇，每个簇里面的样本的二阶梯度之和占所有样本的二阶梯度之和的比率不超过$\epsilon$。</p>
+<p>此外在最新版本的XGBoost(0.7.1)中，已经支持基于直方图的划分点确定的方法，这一点在LightGBM中再详细讨论。</p>
+<ul>
+<li>能够意识到输入的稀疏性</li>
+</ul>
+<p>考虑到实际中模型的输入往往是稀疏的，有鉴于此作者在XGBoost中，在进行划分的时候会设置一个默认的方向(左或者右)，当遇到缺失值的时候，将该样本划到默认方向。由于方向只有左或者右，直接找到使收益最大的方向作为缺失值的方向，因此XGBoost的输入的数据矩阵中允许有缺失值。</p>
+<ul>
+<li>并行计算</li>
+</ul>
+<p>Boosting算法一大缺点就是各基分类器只能串行的进行训练，无法并行化，所以XGBoost中的并行计算是针对特征的，即计算各最优划分特征的时候并行化。这一点需要预先将训练样本按照各特征进行排序，并存储排好的顺序，因而在减少训练时间的同时，加大的内存的消耗。</p>
+<h2 id="XGBoost-VS-GBDT"><a href="#XGBoost-VS-GBDT" class="headerlink" title="XGBoost VS GBDT"></a>XGBoost VS GBDT</h2><p>相较于GBDT，XGBoost有以下优点：</p>
+<ol>
+<li>GBDT以传统CART作为基学习器，而XGBoost还支持线性分类器，相当于引入L1和L2正则化项的逻辑回归（分类问题）和线性回归（回归问题）。</li>
+<li>GBDT在优化时只用到一阶导数，XGBoost对代价函数做了二阶Talor展开，利用了一阶导数和二阶导数。</li>
+<li>XGBoost支持自定义的损失函数，只要是能满足二阶连续可导的函数均可以作为损失函数</li>
+<li>XGBoost在损失函数中显示地加入正则化项，用于控制模型的复杂度。</li>
+<li>当样本存在缺失值是，XGBoosting能自动学习分裂方向，而GBDT无法处理缺失值。</li>
+<li>XGBoost借鉴RF的做法，支持列抽样，这样不仅能防止过拟合，还能降低计算量。</li>
+<li>XGBoost在选择最优划分点时，支持按分位数寻找候选划分点，也支持按直方图寻找划分点，减小了计算量。</li>
+<li>XGBoost支持并行计算。</li>
+</ol>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ol>
+<li><a href="https://xgboost.readthedocs.io/en/latest/" target="_blank" rel="noopener">XGBoost文档</a> </li>
+<li><a href="https://lightgbm.readthedocs.io/en/latest/" target="_blank" rel="noopener">LightGBM文档</a></li>
+<li>LightGBM: A Highly Efficient Gradient Boosting Decision Tree</li>
+<li>XGBoost: A Scalable Tree Boosting System</li>
+<li><a href="https://blog.csdn.net/niaolianjiulin/article/details/76584785" target="_blank" rel="noopener">https://blog.csdn.net/niaolianjiulin/article/details/76584785</a></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/29/XGBoost原理/" data-id="ck06esb3k0007osupgzvshbw8" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/机器学习/">机器学习</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/03/29/LightGBM原理/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          LightGBM
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/03/29/AdaBoost原理/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">AdaBoost</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/机器学习/">机器学习</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/机器学习/">机器学习</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/机器学习/" style="font-size: 10px;">机器学习</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/09/01/post-name/">post_name</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/19/ESMM模型/">ESMM模型</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/16/word2vec原理总结/">word2vec原理总结</a>
+          </li>
+        
+          <li>
+            <a href="/2019/03/29/GBDT原理/">GBDT</a>
+          </li>
+        
+          <li>
+            <a href="/2019/03/29/LightGBM原理/">LightGBM</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
